@@ -13,18 +13,23 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
     @IBOutlet weak var tableView: UITableView! //1st
     
     var tasks : [Task] = []   //7th
-    var selectedIndex = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        tasks = makeTasks()   //8th
         
         tableView.dataSource = self   //2nd
         tableView.delegate = self
         
     }
+    
+    override func viewWillAppear(_ animated: Bool) {     //cd2
+        getTasks()
+        tableView.reloadData()               //cd3
+    }
+    
+    
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {   //3rd, 5th is creating the class task.swift
         return tasks.count     //9th
@@ -34,9 +39,9 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
         let cell = UITableViewCell()
         let task = tasks[indexPath.row]     //10th
         if task.important == true {
-            cell.textLabel?.text = task.name  //11th
+            cell.textLabel?.text = "😇\(task.name!)"  //11th
         } else if task.important == false {
-            cell.textLabel?.text = "🖕🏻\(task.name)"
+            cell.textLabel?.text = "\(task.name!)"
         }
         
         
@@ -45,7 +50,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
          let task = tasks[indexPath.row]
-            selectedIndex = indexPath.row
+        
         
         
         performSegue(withIdentifier: "selectTaskSegue", sender: task)
@@ -53,23 +58,8 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
     
     }       //20th after creating new story board view controller for selecting task and creating correpsonding segue
     
+
     
-    func makeTasks() -> [Task] {   //6th
-        let task1 = Task()
-        task1.name = "Walk the dog"
-        task1.important = false
-        
-        let task2 = Task()
-        task2.name = "Buy cheese"
-        task2.important = true
-        
-        let task3 = Task()
-        task3.name = "Mow the lawn"
-        task3.important = false
-        
-    return [task1, task2, task3]
-        
-    }
     
     @IBAction func plusTapped(_ sender: Any) {    // 12th add navigation/ plus button on storyboard tableview view controller. create another view controller. create segue. 
         
@@ -80,22 +70,31 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
         performSegue(withIdentifier: "addSegue", sender: nil)
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {  //16th    
-        //21st  since there are two segues, create if statement 
-        if segue.identifier == "addSegue" {
-            let nextVC = segue.destination as! CreateTaskViewController
-            nextVC.previousVC = self }
-        else if segue.identifier == "selectTaskSegue" {    //22nd create new view controller. 
+    
+    
+    func getTasks() { // cd 1 out of order  but after you create the coredata plus add shit
+            let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        
+        
+        do {
+           tasks =  try context.fetch(Task.fetchRequest()) as! [Task]
+            print(tasks)    //whenever something throws, you do this do try catch shit, do this.
+        }   catch {
+            print("shit dont work")
+        }
+    }
+    
+    
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {  //16th
+
+        if segue.identifier == "selectTaskSegue" {    //22nd create new view controller.
             let deleteVC = segue.destination as! SpecificTaskViewController
-            deleteVC.task = sender as! Task
-            deleteVC.previousVC = self
-    }
-    }
+            deleteVC.task = sender as? Task
     
-    
+    }
 }
-
-
+    }
 
 
 /*
